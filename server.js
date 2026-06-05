@@ -1,13 +1,6 @@
 const cloudinary = require('cloudinary');
 const app = require('./app');
 const connectDatabase = require('./config/database');
-const PORT = process.env.PORT || 4000;
-
-// UncaughtException Error
-process.on('uncaughtException', (err) => {
-    console.log(`Error: ${err.message}`);
-    process.exit(1);
-});
 
 connectDatabase();
 
@@ -32,14 +25,23 @@ app.get('/', (req, res) => {
     });
 });
 
-const server = app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`)
-});
+// Local development server (not used on Vercel)
+if (!process.env.VERCEL) {
+    const PORT = process.env.PORT || 4000;
+    const server = app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
 
-// Unhandled Promise Rejection
-process.on('unhandledRejection', (err) => {
-    console.log(`Error: ${err.message}`);
-    server.close(() => {
+    process.on('uncaughtException', (err) => {
+        console.log(`Error: ${err.message}`);
         process.exit(1);
     });
-});
+
+    process.on('unhandledRejection', (err) => {
+        console.log(`Error: ${err.message}`);
+        server.close(() => process.exit(1));
+    });
+}
+
+// Export app for Vercel serverless
+module.exports = app;
