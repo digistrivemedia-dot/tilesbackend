@@ -193,13 +193,8 @@ exports.updateProduct = asyncErrorHandler(async (req, res, next) => {
         }
 
         if (images && images.length > 0) {
-            if (product.images && product.images.length > 0) {
-                for (let i = 0; i < product.images.length; i++) {
-                    await cloudinary.v2.uploader.destroy(product.images[i].public_id);
-                }
-            }
-
-            const imagesLink = [];
+            // Keep existing images and append new ones
+            const imagesLink = [...(product.images || [])];
 
             for (let i = 0; i < images.length; i++) {
                 const result = await cloudinary.v2.uploader.upload(images[i], {
@@ -209,7 +204,7 @@ exports.updateProduct = asyncErrorHandler(async (req, res, next) => {
                 imagesLink.push({
                     public_id: result.public_id,
                     url: result.secure_url,
-                    isFeatured: i === 0 ? true : false,
+                    isFeatured: false,
                 });
             }
             req.body.images = imagesLink;
